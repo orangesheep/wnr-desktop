@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WNR Desktop Player Bv0.0.01</title>
+</head>
+<body style="width: 100%; height: 100%;">
+
+ <!--
+ 
+ This code is not very well documented. It probably won't be, for a while.
+I'm really sorry.
+
+
+ -->
+<script src="./jquery-3.1.1.min.js"></script>
+<script src="./screenfull.min.js"></script>
+<script>
+//Error images:
+$('img').one('error', function() { this.src = 'w.png'; }); 
+// Create an empty context menu
+var menu = new nw.Menu();
+
+// Add some items with label
+menu.append(new nw.MenuItem({
+  label: 'Paste Clipboard URL',
+  click: function(){
+ var text = require('nw.gui').Clipboard.get().get('text');
+
+ $('input').val(text);
+  }
+}));
+menu.append(new nw.MenuItem({
+  label: 'Re-Initialize',
+  click: function(){
+    initfunc();
+  }
+}));
+menu.append(new nw.MenuItem({
+  label: 'Open Developer Tools',
+  click: function(){
+   // alert('This is a BETA version of WNR. Please click the "DEV" button at the top.');
+  }
+}));
+ menu.append(new nw.MenuItem({ label: 'Report Bug' ,
+  click: function(){
+    alert('Bug reports are not yet coded. Please message me on twitter @OrangeSheep14.'	);
+	}
+
+	}));
+ menu.append(new nw.MenuItem({ type: 'separator' }));
+ menu.append(new nw.MenuItem({ label: 'About',
+ click: function(){
+    alert('WNR Desktop Player Bv0.0.01 \n Developed by @orangesheep14.  A FULL LIST OF ATTRIBUTIONS WILL BE COMPILED LATER.'); }
+	}));
+
+// Hooks the "contextmenu" event
+document.body.addEventListener('contextmenu', function(ev) {
+  // Prevent showing default context menu
+  ev.preventDefault();
+  // Popup the native context menu at place you click
+  menu.popup(ev.x, ev.y);
+
+  return false;
+}, false);
+
+const testFolder = '../files/';
+const fs = require('fs');
+var os = require('os');
+// Open a text file with default text editor. document.write('You are running on ', os.platform());
+
+
+cwd= process.cwd();
+cldp= process.execPath;
+cld= cldp.slice(0, -11);
+var cwd = cwd.split(String.fromCharCode(92)).join(String.fromCharCode(47));
+ console.log("running from "+cwd);
+//nw.Shell.openItem(cwd+'/dl.cmd');
+ reloadfiles();
+
+ function downloadsong(){
+  $(".loading-dl").removeClass("hidden");
+ init();
+ var urlv= $("#url").val();
+ var url= urlv.toLowerCase();
+ var fromwhere= $("#fromwhere").val();
+var end='';
+ if (fromwhere != ''){
+ end='"';
+
+ }
+ var fullurl = fromwhere+url+end;
+require('child_process').exec('youtube-dl.exe --extract-audio --write-thumbnail --audio-format wav --audio-quality 320k --embed-thumbnail --metadata-from-title "%(artist)s - %(title)s" --output  "../files/%(title)s.%(ext)s" '+fullurl, function(){
+   //  https://www.youtube.com/watch?v=8GW6sLrK40k
+
+   reloadfiles();
+
+  // $('#obtrusive').show();
+     $(".loading-dl").addClass("hidden");
+       init();
+       initfunc();
+      console.log("downloading "+fullurl);
+	  
+	  
+	  
+	  var options = {
+  icon: "w.png",
+  body: "Downloaded"
+ };
+
+var notification = new Notification("Download Complete!",options);
+
+});
+ 
+}
+function makeSuffixRegExp(suffix, caseInsensitive) {
+  return new RegExp(
+      String(suffix).replace(/[$%()*+.?\[\\\]{|}]/g, "\\$&") + "$",
+      caseInsensitive ? "i" : "");
+}
+var total_s= 0;
+var s_num=1;
+function reloadfiles(){
+
+$('#playlist').html();
+fs.readdir(testFolder, (err, files) => {
+  files.forEach(file => {
+  if( file.substr(-4) === ".wav" ||  file.substr(-4) === ".ogg" ) {
+  var location = cld+'/files/'+file;
+  var songname = file.slice(0,-4);
+if (!document.getElementById(""+file)) {
+
+$('#playlist').append('<li id="'+file+'"><a  onclick="initfunc(); event.preventDefault(); return false" class="s_'+s_num+'" href="'+location+'">'+songname+'</a></li>');
+s_num++;
+total_s++;
+}
+
+
+
+	}
+
+  });
+})
+
+}
+
+$( document ).ready(function() {
+  init();
+});
+
+var audio;
+var playlist;
+var tracks;
+var current;
+  current =   1;
+function init(){
+
+ //$('.s_0').parent().addClass("active")
+ //$('.s_0').attr('href');
+
+  audio = $('audio');
+    playlist = $('#playlist');
+    tracks = playlist.find('li a');
+    len = total_s;
+   // audio[0].volume = .5;
+    playlist.find('a').click(function(e){
+        e.preventDefault();
+        link = $(this);
+        current = link.parent().index();
+        run(link, audio[0], current);
+    });
+    audio[0].addEventListener('ended',function(e){
+
+
+        if(current < len){
+          var curplay = current -1;
+          link = playlist.find('a')[current];
+          run($(link),audio[0],current);
+
+        }
+
+         current++
+         if( current > tracks.length){
+ console.log('restarting, ' +current+" is > than " +tracks.length );
+             current = 0;
+             link = playlist.find('a')[current];
+         }
+    });
+
+
+}
+function run(link, player, curnumber){
+       var playersrc = link.attr('href');
+
+		 var songname = playersrc.slice(0,-4);
+		$('.albumart').attr('src', songname+".jpg")
+        par = link.parent();
+		player.src = playersrc;
+        par.addClass('active').siblings().removeClass('active');
+        audio[0].load();
+        audio[0].play();
+        current++;
+        console.log("length:"+len+". current:"+current+".  curnumber"+curnumber);
+
+}
+
+
+
+function initfunc(){
+$('#obtrusive').hide();
+reloadfiles();
+init();
+$(".initbutton").html("Re-Innitialize Player");
+
+}
+
+	function togglesquare() {
+         $(".albumart").toggleClass("square");
+    }
+ function togglevis() {
+         $(".albumart").toggleClass("hidden");
+    }
+ function togglefull() {
+ $("#playlist").toggleClass("hidden");
+
+  var target = $('.albumartshown')[0];
+  if (screenfull.enabled) {
+        screenfull.toggle(target);
+    }
+
+    }
+
+
+	$('.albumart').on('click', event => {
+    if (screenfull.enabled) {
+        screenfull.toggle(event.target);
+    }
+});
+	function realfull(){
+	// $(".realpic").toggleClass("fullpic");
+	 var target = $('.realpic')[0];
+    if (screenfull.enabled) {
+    //    screenfull.toggle(target);
+    }
+}
+//var help = console.log('type "help()" for help');
+
+//alert(cwd);
+
+
+
+gui = require('nw.gui');
+//gui.Window.open('http://google.com',{toolbar:false,frame:false});
+
+</script>
+
+
+<style>
+.fullpic{
+height:auto!important;
+width:100vw!important;
+background-color:black;
+position:fixed;
+top:0;
+left:0;
+
+}
+.hidden{
+display:none;
+}
+*{
+transition:0.5s;
+}
+ 
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 400;
+ format('woff2');
+      src: url(OpenSans.woff2);
+    }
+body{
+	background-color:#181818;
+	color:white;
+
+ font-family: 'Open Sans', sans-serif;
+ }
+#obtrusive{
+font-family:"Open Sans", sans-serif;
+color:white;
+z-index:99999;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background-color:black;
+
+}
+
+ul li{ list-style-type: none;
+text-align:left;
+}
+
+  .square{
+    margin:0 auto;object-fit: cover;
+  width:80vw;
+  height:80vw;padding:0;
+  max-width:400px;
+  max-height:400px;
+  }
+    #ToggleStart{
+     background:none!important;
+     border:none;
+     padding:0!important;
+     font: inherit;
+     /*border is optional*/
+     border-bottom:1px solid #444;
+     cursor: pointer;
+}
+#background {
+    height:500px;
+    width:100%;
+    text-align:center;
+ z-index:-999;
+    filter: blur(100px);
+    position: absolute;
+    left:0;
+    top: 0;
+}
+
+#appcontent {
+   z-index:9999;
+}
+.albumart{
+max-width:400px;
+margin-top:50px!important;
+  width:90%;
+  margin:0 auto;
+  padding:5%;
+
+}
+
+
+ #playlist{background:#181818;
+ width:90%;
+ max-width:800px;
+ margin 0 auto;
+margin-bottom:72px!important;
+ }
+ audio{position:fixed;bottom:0;left:0;right:0;background:#282828;width:100%;
+
+  padding-top:20px;
+ padding-bottom:20px;
+ padding-left:10px;
+ padding-right:10px;
+ margin-left:-5px;
+ }
+.active a {color:#5DB0E6!important;text-decoration:none;background-color:#333;}
+li a{display:block; color:#eeeedd;background-color:#282828padding:5px;font-size:14px;}
+li a:hover{text-decoration:none;background-color:#333;}
+
+
+audio::-webkit-media-controls-panel{
+  background-color:#282828;
+
+}
+
+
+
+audio::-webkit-media-controls-mute-button{
+
+}
+
+audio::-webkit-media-controls-play-button{
+
+}
+
+audio::-webkit-media-controls-current-time-display{
+  color:white; color:white;
+
+}
+
+audio::-webkit-media-controls-time-remaining-display{
+  color:white;
+}
+
+
+audio::-webkit-media-controls-volume-slider-container{
+ background-color:white;
+
+}
+
+audio::-webkit-media-controls-volume-slider{
+ background-color:white;
+}
+ #Controls {
+ text-align:center;
+ z-index:999999999;
+ background-color:#121212;
+  -webkit-app-region: drag;
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  width:100%;
+  height:40px;
+  user-select: none;
+  line-height:40px;
+
+
+
+}
+button,input,select{
+outline:0;
+transition:0.05s;
+text-transform:uppercase;
+color:#5DB0E6!important;
+ background-color:#181818;
+border:#333 solid 1px;
+border-radius:20px;
+padding:5px;
+font-size:14px;
+-webkit-app-region: no-drag!important;
+}
+input,select{
+background-color:white;
+color:black;
+
+}
+
+
+
+button:hover{
+margin-top:3px;
+margin-bottom:3px;
+margin-left:2.5px;
+margin-right:2.5px;
+
+padding:1.5px;
+font-size:15px;
+border:1px solid white;
+
+}
+ .winbuttons{
+
+ position:fixed;
+ top:0;
+ right:0;
+ z-index:9999999999999;
+
+
+ }
+ .winbuttons button{ outline:0;
+transition:0s!important;
+padding:5px;
+font-size:14px;
+ background-color:#121212!important;
+ border:#121212 1px solid;
+ border-radius:0!important;
+ margin:0;
+ min-width:40px!important;
+ min-height:40px!important;
+ color:#cecece!important;
+
+
+ }
+
+
+ .winbuttons button:hover{
+ transition:0s!important;
+padding:5px;
+font-size:14px;
+
+ margin:0;
+
+ color:#cecece!important;}
+
+ .not-x:hover{
+ background-color:#282828!important;
+ border: 1px solid #282828!important;
+
+
+ }
+ .x-button:hover{
+  background-color:#E81123!important;
+ border: 1px solid  #E81123!important;
+
+ }
+
+.screen {
+ margin-bottom:0px;
+  -webkit-app-region: no-drag;
+  height:94vh;
+  overflow:scroll;
+  position: absolute;
+  top: 6vh;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+#Controls:hover .screen {
+  ddisplay: none;
+}
+.titlebar {
+  -webkit-user-select: none;
+  -webkit-app-region: drag;
+}
+
+
+
+::-webkit-scrollbar {
+    height: 15px;
+    width: 15px;
+    background: #121212;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #282828;
+
+}
+
+::-webkit-scrollbar-corner {
+    background: #121212;
+}
+#titlelogo{
+width:20px;
+height:20px;
+position:fixed;
+left:4px;
+top:4px;
+}
+.rbutton{
+height:30px;
+width:30px;
+}
+.unloaded{
+  background:url(W.png);
+}
+</style>
+
+
+
+<div id="Controls"><img id="titlelogo" src="W-small.png"  alt="W"/>
+<div id="titlebar" class="titlebar">WNR Player Desktop<br/></div>
+<div class="winbuttons">
+<button onclick="require('nw.gui').Window.get().showDevTools()" class="not-x">Dev</button>
+<button onclick="require('nw.gui').Window.get().minimize()" class="not-x">-</button>
+<button onclick="require('nw.gui').Window.get().maximize()" class="not-x">☐</button>
+<button onclick="window.close()" class="x-button">X</button>
+</div>
+
+  </div>
+
+      <div class="screen">
+<div id="obtrusive">
+<center>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+Please click the following button to innitialize the player:<br/>
+
+<button class="initbutton" onclick="initfunc()">Innitialize Player</button><br/>
+<small>(This may need to be done after downloading a song)</small><br/>
+
+</center>
+</div>
+ <center id="center">
+
+ <div style="margin-top:20px;background-color:rgba(0,0,0,0)" class="albumartshown">
+<!--div id="background">
+ <img src="w.png" class="albumart square "/>
+</div-->
+
+
+
+
+ <img src="" class="albumart square realpic" onclick="realfull()"/>
+<div style="margin-top:0px;">
+<button class="rbutton" id="togglesquare" onclick="togglesquare()">☐</button>
+<button class="rbutton" id="togglesfull" onclick="togglefull()">➚</button>
+<button class="rbutton" id="togglesvis" onclick="togglevis()">☼</button>
+ <br/>
+ <br/>
+</div>
+
+
+<div class="downloadbar" style="margin-top:20px; ">
+<!--button class="initbutton" onclick="initfunc()">Innitialize Player</button-->
+<select name="fromwhere"  id="fromwhere" style="display:none">
+  <option value='gvsearch1:"'>First Google Result</option>
+  <option value=' '>URL</option>
+  
+<!--  <option value="https://www.youtube.com/results?q=">First Youtube result</option>
+  <option value="https://soundcloud.com/search?q=">First Soundcloud</option>-->
+
+</select><input width="300px" id="url" value="" placeholder="Paste URL or type your search."><button onclick="downloadsong()">Load</button>
+<img src="loading.gif" class="loading-dl hidden"/>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+  <audio id="audio" preload="auto" tabindex="0" controls="" >
+        <source src=" ">
+        An error occured. Please restart WNR.
+    </audio>
+
+
+</center>
+
+	<center>
+   <ul id="playlist">
+
+
+    </ul>
+
+</div>
+</div>
+ </center>
+</body>
+</html>

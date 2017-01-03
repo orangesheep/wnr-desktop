@@ -1,0 +1,21 @@
+{
+  "name": "WNR Player",
+  "main": "index.html",
+    "description": "Desktop WNR song downloader",
+   "version": "0.0.01",
+   "keywords": [ "youtube", "wnr" ],
+   "window": {
+     "title": "WNR Player",
+     "icon": "W.png",
+     "toolbar": false,
+     "frame": false,
+     "width": 800,
+     "height": 800,
+
+     "min_width": 400,
+     "min_height": 200 
+   },
+   "webkit": {
+     "plugin": true
+   }
+ }
