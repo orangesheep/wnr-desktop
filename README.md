@@ -1,4 +1,5 @@
-WNR Bv0.0.01
+[DOWNLOAD WNR Bv0.0.01 FOR WINDOWS](https://github.com/orangesheep/wnr-desktop/archive/master.zip)
+
 
 DISCLAIMER: The developer is not responsible for any misuse of this program.
 WNR Desktop Player is a frontend that uses youtube-dl to download music from hundreds of sites.
